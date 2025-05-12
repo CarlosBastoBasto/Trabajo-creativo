@@ -1,0 +1,168 @@
+mkdir tienda_mongo
+cd tienda_mongo
+python -m venv venv
+ .\venv\Scripts\activate
+pip install pymongo faker
+mongod --version
+net start MongoDB
+mongo
+from pymongo import MongoClient
+from faker import Faker
+import random
+
+# Conexión a MongoDB local
+client = MongoClient('mongodb://localhost:27017/')
+db = client['tienda']
+coleccion = db['productos']
+
+# Instancia de Faker para datos ficticios
+faker = Faker()
+
+# Limpiar colección anterior
+coleccion.delete_many({})
+
+# Generar 100 registros
+productos = []
+categorias = ['Electrónica', 'Hogar', 'Juguetería', 'Ropa', 'Deportes']
+
+for _ in range(100):
+    producto = {
+        "nombre": faker.word().capitalize(),
+        "descripcion": faker.sentence(),
+        "precio": round(random.uniform(10.0, 500.0), 2),
+        "stock": random.randint(1, 100),
+        "categoria": random.choice(categorias)
+    }
+    productos.append(producto)
+
+# Insertar en MongoDB
+coleccion.insert_many(productos)
+
+print("✅ 100 productos insertados correctamente.")
+tienda_mongo/
+│
+├── venv/               # Entorno virtual
+├── generar_productos.py  # Script Python
+└── requirements.txt    # Dependencias
+pip freeze > requirements.txt
+faker==<versión>
+pymongo==<versión>
+python generar_productos.py
+{
+  "_id": ObjectId("..."),
+  "nombre": "Tablet",
+  "descripcion": "Innovador dispositivo portátil para trabajo y entretenimiento.",
+  "precio": 249.99,
+  "stock": 30,
+  "categoria": "Electrónica",
+  "fecha_registro": ISODate("2025-05-07T14:35:22.000Z")
+}
+use catalogo_productos
+
+db.productos.insertMany([
+    { "producto_id": 1, "nombre": "Laptop", "categoria": "Electrónica", "precio": 1500.00, "descripcion": "Laptop de alto rendimiento." },
+    { "producto_id": 2, "nombre": "Teléfono", "categoria": "Electrónica", "precio": 500.00, "descripcion": "Teléfono inteligente." },
+    { "producto_id": 3, "nombre": "Cafetera", "categoria": "Electrodomésticos", "precio": 120.00, "descripcion": "Cafetera de alta capacidad." },
+    ...
+])
+db.productos.insertOne({ "producto_id": 4, "nombre": "Auriculares", "categoria": "Electrónica", "precio": 99.99, "descripcion": "Auriculares con cancelación de ruido." })
+db.productos.find({ "producto_id": 1 })
+db.productos.updateOne({ "producto_id": 1 }, { $set: { "precio": 1600.00 } })
+db.productos.deleteOne({ "producto_id": 3 })
+db.productos.find({ "categoria": "Electrónica" })
+db.productos.aggregate([
+    { $group: { _id: "$categoria", total: { $sum: 1 } } }
+])
+db.productos.aggregate([
+    { $group: { _id: null, promedio_precio: { $avg: "$precio" } } }
+])
+sudo pacman -Syu docker
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo systemctl status docker
+mkdir ~/docker-hbase
+cd ~/docker-hbase
+version: '2'
+
+services:
+  zookeeper:
+    image: zookeeper
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+
+  hbase:
+    image: harisekhon/hbase
+    ports:
+      - "16010:16010"
+      - "16030:16030"
+      - "16000:16000"
+      - "16020:16020"
+    environment:
+      - HBASE_MANAGES_ZK=false
+    depends_on:
+      - zookeeper
+cd ~/docker-hbase
+docker compose up -d
+docker ps
+http://localhost:16010
+sudo pacman -S ufw
+5.2 Activar y permitir puertos
+sudo ufw enable
+sudo ufw allow 16010
+sudo ufw allow 16030
+sudo ufw allow 2181
+sudo ufw status
+docker exec -it <ID o nombre del contenedor HBase> bash
+hbase shell
+create 'productos', 'info'
+scan 'productos'
+
+exit
+exit
+docker cp /home/mre/Downloads/100_productos.json <id_del_contenedor_hbase>:/root/
+pip install happybase thrift
+create 'productos', 'info'
+import happybase
+import json
+
+# Conexión a HBase
+connection = happybase.Connection('localhost')  # Cambiar la IP si es necesario
+connection.open()
+
+# Nombre de la tabla
+table_name = 'productos'
+
+# Cargar los datos desde el archivo JSON
+with open('/home/mre/Downloads/100_productos.json', 'r') as file:
+    productos = json.load(file)
+# Insertar los productos en HBase
+table = connection.table(table_name)
+for producto in productos:
+    row_key = str(producto["producto_id"])
+    table.put(row_key, {
+        'info:producto_id': str(producto['producto_id']),
+        'info:nombre': producto['nombre'],
+        'info:categoria': producto['categoria'],
+        'info:precio': str(producto['precio']),
+        'info:descripcion': producto['descripcion']
+    })
+
+# Cerrar la conexión
+connection.close()
+
+print("Datos insertados correctamente")
+scan 'productos'
+get 'productos', '1'
+scan 'productos', {
+  FILTER => "SingleColumnValueFilter('info', 'precio', >, 'binary:500')"
+}
+table.put('101', {
+    'info:producto_id': '101',
+    'info:nombre': 'Producto Nuevo',
+    'info:categoria': 'Electrónica',
+    'info:precio': '999',
+    'info:descripcion': 'Nuevo producto de prueba.'
+})
+table.delete('101')  # Eliminar el producto con RowKey 101
